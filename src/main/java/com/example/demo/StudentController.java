@@ -45,17 +45,37 @@ public class StudentController {
         tfName.setEditable(false);
         Platform.runLater(()->{
             tfName.setText(student.lastName + ", " + student.firstName);
-            ResultSet rs = db.executeQueryWithResultSet("SELECT * from student WHERE uid = ?", student.id);
+            ResultSet rs = db.executeQueryWithResultSet("SELECT * from student WHERE id = ?", student.id);
             while(true){
                 try {
                     if (!rs.next()) break;
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
                 try {
-                    rs.getInt("cid");
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
+                    int cid = rs.getInt("cid");
+                    ResultSet rs2 = db.executeQueryWithResultSet("SELECT * from course WHERE id = ?", cid);
+                    while(true){
+                        try {
+                            if (!rs.next()) break;
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                        try {
+                            String courseName = rs2.getString("coursename");
+                            String courseCOde = rs2.getString("coursecode");
+                            Double grade = rs2.getDouble("grade");
+
+                            Course course = new Course(courseCOde, courseName);
+
+
+
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
             }
         });
