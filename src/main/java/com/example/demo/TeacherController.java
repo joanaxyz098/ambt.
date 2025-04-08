@@ -35,7 +35,9 @@ public class TeacherController {
     @FXML
     private TableColumn<Course, String> courseNameColumn;
 
-    TableColumn<Course, Void> actionColumn = new TableColumn<>("Action");
+    @FXML
+    private TableColumn<Course, Void> actionColumn;
+
 
 
     @FXML
@@ -60,44 +62,53 @@ public class TeacherController {
             tfName.setText(teacher.lastName + ", " + teacher.firstName);
 
             String query = """
-            SELECT c.coursecode, c.coursename
-            FROM teacher s 
-            JOIN course c ON s.cid = c.id 
-            WHERE s.uid = ?
-        """;
-
+                SELECT c.coursecode, c.coursename, c.id AS cid
+                FROM teacher s 
+                JOIN course c ON s.cid = c.id 
+                WHERE s.uid = ?
+            """;
             ResultSet rs = db.executeQueryWithResultSet(query, teacher.id);
-
             try {
                 while (rs.next()) {
                     String courseCode = rs.getString("coursecode");
                     String courseName = rs.getString("coursename");
-                    teacher.courses.add(new Course(courseCode, courseName));
+                    int cid = rs.getInt("cid");
+                    teacher.courses.add(new Course(courseCode, courseName, cid));
                 }
 
                 ObservableList<Course> data = FXCollections.observableArrayList(teacher.courses);
 
                 actionColumn.setCellFactory(col -> new TableCell<Course, Void>() {
-                    private final Button btn = new Button("View");
+                    private final Button btn = new Button("Grade");
                     {
                         btn.setOnAction(event -> {
+                            Course course = getTableView().getItems().get(getIndex());
 
+                            try {
+                                FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("grades.fxml"));
+                                Parent root = fxmlLoader.load();
+
+                                GradesController gradesController = fxmlLoader.getController();
+                                gradesController.setUser(user);
+                                gradesController.setCourseId(course.getId());
+
+                                Scene scene = ((Node) event.getSource()).getScene();
+                                scene.setRoot(root);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
                         });
+
                     }
 
                     @Override
                     protected void updateItem(Void item, boolean empty) {
                         super.updateItem(item, empty);
-                        if (empty) {
-                            setGraphic(null);
-                        } else {
-                            setGraphic(btn);
-                        }
+                        setGraphic(empty ? null : btn);
                     }
                 });
 
                 tblteacher.setItems(data);
-                tblteacher.getColumns().add(actionColumn);
 
             } catch (SQLException e) {
                 throw new RuntimeException(e);

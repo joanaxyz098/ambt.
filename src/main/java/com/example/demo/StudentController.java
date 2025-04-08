@@ -80,8 +80,9 @@ public class StudentController {
                 while (rs.next()) {
                     String courseCode = rs.getString("coursecode");
                     String courseName = rs.getString("coursename");
+                    int id = rs.getInt("cid");
                     double grade = rs.getDouble("grade");
-                    student.courseGrades.add(new CourseGrade(new Course(courseCode, courseName), grade));
+                    student.courseGrades.add(new CourseGrade(new Course(courseCode, courseName, id), grade));
                 }
                 ObservableList<CourseGrade> data = FXCollections.observableArrayList(student.courseGrades);
                 tblStudent.setItems(data);
