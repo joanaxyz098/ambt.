@@ -1,8 +1,9 @@
 package com.example.demo;
 
-public class Teacher extends User {
-    Course[] coursesHandled;
+import java.util.ArrayList;
 
+public class Teacher extends User {
+    ArrayList<Course> courses = new ArrayList<Course>();
     public Teacher(int id, String firstName, String lastName, String username, String password, boolean isStudent) {
         super(id, firstName, lastName, username, password, isStudent);
     }

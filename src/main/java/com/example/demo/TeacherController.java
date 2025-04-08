@@ -1,7 +1,6 @@
 package com.example.demo;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -19,7 +18,7 @@ import java.io.ObjectOutputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class StudentController {
+public class TeacherController {
 
     @FXML
     private Button btnLogout;
@@ -28,63 +27,78 @@ public class StudentController {
     private Label lblName;
 
     @FXML
-    private TableView<CourseGrade> tblStudent;
+    private TableView<Course> tblteacher;
 
     @FXML
-    private TableColumn<CourseGrade, String> courseCodeColumn;
+    private TableColumn<Course, String> courseCodeColumn;
 
     @FXML
-    private TableColumn<CourseGrade, String> courseNameColumn;
+    private TableColumn<Course, String> courseNameColumn;
 
-    @FXML
-    private TableColumn<CourseGrade, Double> gradesColumn;
+    TableColumn<Course, Void> actionColumn = new TableColumn<>("Action");
+
 
     @FXML
     private TextField tfName;
 
-    private Student student;
+    private Teacher teacher;
     private User user;
     private Database db = new Database();
 
     void setUser(User user) {
         this.user = user;
-        student = new Student(user.id, user.firstName, user.lastName, user.username, user.password, user.isStudent);
+        teacher = new Teacher(user.id, user.firstName, user.lastName, user.username, user.password, user.isStudent);
     }
 
     @FXML
     void initialize() {
         tfName.setEditable(false);
-        courseCodeColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getCourse().getCourseCode())
-        );
-
-        courseNameColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getCourse().getCourseName())
-        );
-
-        gradesColumn.setCellValueFactory(new PropertyValueFactory<>("grade"));
+        courseCodeColumn.setCellValueFactory(new PropertyValueFactory<>("courseCode"));
+        courseNameColumn.setCellValueFactory(new PropertyValueFactory<>("courseName"));
 
         Platform.runLater(() -> {
-            tfName.setText(student.lastName + ", " + student.firstName);
+            tfName.setText(teacher.lastName + ", " + teacher.firstName);
 
             String query = """
-            SELECT c.coursecode, c.coursename, s.grade 
-            FROM student s 
+            SELECT c.coursecode, c.coursename
+            FROM teacher s 
             JOIN course c ON s.cid = c.id 
             WHERE s.uid = ?
         """;
 
-            ResultSet rs = db.executeQueryWithResultSet(query, student.id);
+            ResultSet rs = db.executeQueryWithResultSet(query, teacher.id);
 
             try {
                 while (rs.next()) {
                     String courseCode = rs.getString("coursecode");
                     String courseName = rs.getString("coursename");
-                    double grade = rs.getDouble("grade");
-                    student.courseGrades.add(new CourseGrade(new Course(courseCode, courseName), grade));
+                    teacher.courses.add(new Course(courseCode, courseName));
                 }
-                ObservableList<CourseGrade> data = FXCollections.observableArrayList(student.courseGrades);
-                tblStudent.setItems(data);
+
+                ObservableList<Course> data = FXCollections.observableArrayList(teacher.courses);
+
+                actionColumn.setCellFactory(col -> new TableCell<Course, Void>() {
+                    private final Button btn = new Button("View");
+                    {
+                        btn.setOnAction(event -> {
+
+                        });
+                    }
+
+                    @Override
+                    protected void updateItem(Void item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            setGraphic(btn);
+                        }
+                    }
+                });
+
+                tblteacher.setItems(data);
+                tblteacher.getColumns().add(actionColumn);
+
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -95,9 +109,9 @@ public class StudentController {
 
     @FXML
     void onLogout(ActionEvent event) throws IOException {
-        student = null;
+        teacher = null;
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("user.txt"));) {
-            oos.writeObject(student);
+            oos.writeObject(teacher);
         } catch (IOException ex) {
             System.err.println(ex.getClass());
         }

@@ -30,7 +30,7 @@ public class Database {
                 statement.setObject(i + 1, values[i]);
             }
             if(statement.executeUpdate() > 0) {
-                System.out.println("INSERT ROW IS SUCCESSFUL");
+                System.out.println("SUCCESSFUL");
             }
         } catch (SQLException e) {
             e.printStackTrace();

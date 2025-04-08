@@ -13,37 +13,52 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
 public class HelloApplication extends Application {
-    @Override
     public void start(Stage stage) throws IOException {
         File file = new File("user.txt");
         User u = null;
         FXMLLoader fxmlLoader = null;
 
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));) {
+        // Attempt to read the user from file
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             u = (User) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             System.err.println(e.getClass());
         }
 
-        if(!file.exists() || u == null) {
+        // Check if the file doesn't exist or the user is null
+        if (!file.exists() || u == null) {
             fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("login.fxml"));
+            Parent root = fxmlLoader.load();
+            Scene scene = new Scene(root, 320, 240);
+            stage.setScene(scene);
         } else {
-            if(u.isStudent) {
+            // User is logged in, determine their role
+
+            if (u.isStudent) {
                 fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("student.fxml"));
-                fxmlLoader.load();
+                // Load the FXML and inject the controller
+                Parent root = fxmlLoader.load();
                 StudentController studentController = fxmlLoader.getController();
                 studentController.setUser(u);
-            }else{
+                // Set the scene with the loaded FXML
+                Scene scene = new Scene(root, 320, 240);
+                stage.setTitle("Student Dashboard");
+                stage.setScene(scene);
+            } else {
                 fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("teacher.fxml"));
-                fxmlLoader.load();
+                Parent root = fxmlLoader.load();
+                TeacherController teacherController = fxmlLoader.getController();
+                teacherController.setUser(u);
+                Scene scene = new Scene(root, 320, 240);
+                stage.setTitle("Teacher Dashboard");
+                stage.setScene(scene);
             }
         }
 
-        Scene scene = new Scene(fxmlLoader.load(), 320, 240);
-        stage.setTitle("Hello!");
-        stage.setScene(scene);
+        // Show the stage
         stage.show();
     }
+
 
     public static void main(String[] args) {
         launch();
